@@ -4,9 +4,10 @@
  */
 package com.pdmv.repositories;
 
-import com.pdmv.dto.ThesisDTO;
-import com.pdmv.dto.CreateThesisDTO;
-import com.pdmv.dto.ThesisDetailsDTO;
+import com.pdmv.dto.thesis.ThesisDTO;
+import com.pdmv.dto.thesis.CreateThesisDTO;
+import com.pdmv.dto.thesis.ThesisDetailsDTO;
+import com.pdmv.pojo.Thesis;
 import java.util.List;
 import java.util.Map;
 
@@ -16,7 +17,8 @@ import java.util.Map;
  */
 public interface ThesisRepository {
     int addOrUpdate(CreateThesisDTO thesis);
-    ThesisDetailsDTO getThesisById(int id);
+    Thesis getThesisById(int id);
+    ThesisDetailsDTO getThesisDTOById(int id);
     List<ThesisDTO> getLists(Map<String, String> params);
     void submitReportFile(Integer id, String url);
 }

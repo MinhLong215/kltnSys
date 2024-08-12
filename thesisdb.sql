@@ -139,10 +139,12 @@ CREATE TABLE criterion (
     name VARCHAR(255) NOT NULL,
     description TEXT DEFAULT NULL,
     affair_id INT,
+    faculty_id INT,
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     active BOOLEAN DEFAULT TRUE,
-    FOREIGN KEY (affair_id) REFERENCES affair(id)
+    FOREIGN KEY (affair_id) REFERENCES affair(id),
+    FOREIGN KEY (faculty_id) REFERENCES faculty(id)
 );
 
 -- Tạo bảng thesis
@@ -159,12 +161,16 @@ CREATE TABLE thesis (
     affair_id INT,
     critical_lecturer_id INT,
     school_year_id INT,
+    faculty_id INT,
+    major_id INT,
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     active BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (affair_id) REFERENCES affair(id),
     FOREIGN KEY (critical_lecturer_id) REFERENCES lecturer(id),
-    FOREIGN KEY (school_year_id) REFERENCES school_year(id)
+    FOREIGN KEY (school_year_id) REFERENCES school_year(id),
+    FOREIGN KEY (faculty_id) REFERENCES faculty(id),
+    FOREIGN KEY (major_id) REFERENCES major(id)
 );
 
 -- Tạo bảng thesis_lecturer
@@ -191,10 +197,15 @@ CREATE TABLE council (
     name VARCHAR(255) NOT NULL,
     status ENUM('pending', 'blocked') DEFAULT 'pending',
     school_year_id INT,
+    faculty_id INT,
+    affair_id INT,
+    meeting_date DATETIME,
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     active BOOLEAN DEFAULT TRUE,
-    FOREIGN KEY (school_year_id) REFERENCES school_year(id)
+    FOREIGN KEY (school_year_id) REFERENCES school_year(id),
+    FOREIGN KEY (faculty_id) REFERENCES faculty(id),
+    FOREIGN KEY (affair_id) REFERENCES affair(id)
 );
 
 -- Tạo bảng council_lecturer
@@ -202,7 +213,7 @@ CREATE TABLE council_lecturer (
     id INT AUTO_INCREMENT PRIMARY KEY,
     council_id INT,
     lecturer_id INT,
-    position ENUM('president', 'secretary', 'critical') DEFAULT 'critical',
+    position ENUM('president', 'secretary', 'critical', 'member') DEFAULT 'critical',
     FOREIGN KEY (council_id) REFERENCES council(id),
     FOREIGN KEY (lecturer_id) REFERENCES lecturer(id)
 );
@@ -215,6 +226,15 @@ CREATE TABLE council_criterion (
 	weight FLOAT DEFAULT NULL,
     FOREIGN KEY (council_id) REFERENCES council(id),
     FOREIGN KEY (criterion_id) REFERENCES criterion(id)
+);
+
+-- Tạo bảng council_thesis
+CREATE TABLE council_thesis (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    council_id INT,
+    thesis_id INT,
+    FOREIGN KEY (council_id) REFERENCES council(id),
+    FOREIGN KEY (thesis_id) REFERENCES thesis(id)
 );
 
 -- Tạo bảng score

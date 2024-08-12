@@ -7,11 +7,11 @@ package com.pdmv.services.impl;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.api.ApiResponse;
 import com.cloudinary.utils.ObjectUtils;
-import com.pdmv.dto.ThesisDTO;
-import com.pdmv.dto.CreateThesisDTO;
-import com.pdmv.dto.ThesisDetailsDTO;
-import com.pdmv.dto.ThesisLecturerDTO;
-import com.pdmv.dto.ThesisStudentDTO;
+import com.pdmv.dto.thesis.ThesisDTO;
+import com.pdmv.dto.thesis.CreateThesisDTO;
+import com.pdmv.dto.thesis.ThesisDetailsDTO;
+import com.pdmv.dto.thesis.ThesisLecturerDTO;
+import com.pdmv.dto.thesis.ThesisStudentDTO;
 import com.pdmv.pojo.Account;
 import com.pdmv.pojo.Affair;
 import com.pdmv.repositories.AccountRepository;
@@ -68,10 +68,15 @@ public class ThesisServiceImpl implements ThesisService {
             Affair affair = this.affairRepo.getAffairByAccountId(a.getId());
             
             thesis.setAffairId(affair.getId());
+            thesis.setFacultyId(affair.getFacultyId().getId());
+            
+            if (thesis.getMajorId() == null) {
+                throw new IllegalArgumentException("Ngành không được trống hoặc null!");
+            }
         }
         
         int id = this.thesisRepo.addOrUpdate(thesis);
-        ThesisDetailsDTO newThesis = this.thesisRepo.getThesisById(id);
+        ThesisDetailsDTO newThesis = this.thesisRepo.getThesisDTOById(id);
         
         if (thesis.getId() == null) {
             this.sendNotificationMail(newThesis);
@@ -82,7 +87,7 @@ public class ThesisServiceImpl implements ThesisService {
 
     @Override
     public ThesisDetailsDTO getThesisById(int id) {
-        return this.thesisRepo.getThesisById(id);
+        return this.thesisRepo.getThesisDTOById(id);
     }
 
     @Override
@@ -92,7 +97,7 @@ public class ThesisServiceImpl implements ThesisService {
 
     @Override
     public void submitReportFile(int id, MultipartFile file) {
-        ThesisDetailsDTO thesis = this.thesisRepo.getThesisById(id);
+        ThesisDetailsDTO thesis = this.thesisRepo.getThesisDTOById(id);
          
         if (thesis == null) {
             throw new IllegalArgumentException("Không tìm thấy khoá luận!");

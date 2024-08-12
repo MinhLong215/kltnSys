@@ -118,4 +118,13 @@
         <put-attribute name="title" value="Cập nhật Sinh viên" />
         <put-attribute name="content" value="/WEB-INF/pages/student/update-student.jsp" />
     </definition>
+    
+    <definition name="thesis-score-stats" extends="baseLayout">
+        <put-attribute name="title" value="Thống kê điểm khoá luận" />
+        <put-attribute name="content" value="/WEB-INF/pages/stats/thesis-score-stats.jsp" />
+    </definition>
+    <definition name="thesis-count-by-major-stats" extends="baseLayout">
+        <put-attribute name="title" value="Thống kê tần suất tham gia" />
+        <put-attribute name="content" value="/WEB-INF/pages/stats/thesis-count-by-major-stats.jsp" />
+    </definition>
 </tiles-definitions>

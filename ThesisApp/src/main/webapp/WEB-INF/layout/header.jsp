@@ -62,6 +62,19 @@
                                 </li>
                             </ul>
                         </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Thống kê
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <li>
+                                    <a class="dropdown-item" href="<c:url value="/admins/stats/thesis-scores" />">Điểm khoá luận</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="<c:url value="/admins/stats/thesis-count-by-major" />">Tần suất tham gia</a>
+                                </li>
+                            </ul>
+                        </li>
                         <li class="nav-item"><a class="nav-link" href="<c:url value="/logout" />">Đăng xuất</a></li>
                     </ul>
                     <span class="navbar-text"><a class="nav-link" href="<c:url value="/" />">Chào <strong>${pageContext.request.userPrincipal.name}</strong>!</a></span>

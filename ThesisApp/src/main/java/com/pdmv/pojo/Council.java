@@ -5,12 +5,22 @@
 package com.pdmv.pojo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.pdmv.dto.FacultyDTO;
+import com.pdmv.dto.SchoolYearDTO;
+import com.pdmv.dto.council.CouncilCriterionDTO;
+import com.pdmv.dto.council.CouncilLecturerDTO;
+import com.pdmv.dto.council.CouncilThesisDTO;
+import com.pdmv.dto.thesis.ThesisAffairDTO;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -41,6 +51,7 @@ import org.springframework.format.annotation.DateTimeFormat;
     @NamedQuery(name = "Council.findAll", query = "SELECT c FROM Council c"),
     @NamedQuery(name = "Council.findById", query = "SELECT c FROM Council c WHERE c.id = :id"),
     @NamedQuery(name = "Council.findByName", query = "SELECT c FROM Council c WHERE c.name = :name"),
+    @NamedQuery(name = "Council.findByMeetingDate", query = "SELECT c FROM Council c WHERE c.meetingDate = :meetingDate"),
     @NamedQuery(name = "Council.findByStatus", query = "SELECT c FROM Council c WHERE c.status = :status"),
     @NamedQuery(name = "Council.findByCreatedDate", query = "SELECT c FROM Council c WHERE c.createdDate = :createdDate"),
     @NamedQuery(name = "Council.findByUpdatedDate", query = "SELECT c FROM Council c WHERE c.updatedDate = :updatedDate"),
@@ -58,6 +69,15 @@ public class Council implements Serializable {
     @Size(min = 1, max = 255)
     @Column(name = "name")
     private String name;
+    @JoinColumn(name = "faculty_id", referencedColumnName = "id")
+    @ManyToOne
+    @JsonIgnore
+    private Faculty facultyId;
+    @Column(name = "meeting_date")
+    @Temporal(TemporalType.TIMESTAMP)
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date meetingDate;
     @Size(max = 7)
     @Column(name = "status")
     private String status;
@@ -72,14 +92,25 @@ public class Council implements Serializable {
     private Date updatedDate;
     @Column(name = "active")
     private Boolean active;
-    @OneToMany(mappedBy = "councilId")
+    @JoinColumn(name = "affair_id", referencedColumnName = "id")
+    @ManyToOne
+    @JsonIgnore
+    private Affair affairId;
+    @OneToMany(mappedBy = "councilId", fetch = FetchType.EAGER)
+    @JsonIgnore
     private Set<CouncilLecturer> councilLecturerSet;
-    @OneToMany(mappedBy = "councilId")
+    @OneToMany(mappedBy = "councilId", fetch = FetchType.EAGER)
+    @JsonIgnore
     private Set<CouncilCriterion> councilCriterionSet;
+    @OneToMany(mappedBy = "councilId", fetch = FetchType.EAGER)
+    @JsonIgnore
+    private Set<CouncilThesis> councilThesisSet;
     @OneToMany(mappedBy = "councilId")
+    @JsonIgnore
     private Set<Score> scoreSet;
     @JoinColumn(name = "school_year_id", referencedColumnName = "id")
     @ManyToOne
+    @JsonIgnore
     private SchoolYear schoolYearId;
 
     public Council() {
@@ -108,6 +139,22 @@ public class Council implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+    
+    public Date getMeetingDate() {
+        return meetingDate;
+    }
+
+    public void setMeetingDate(Date meetingDatetime) {
+        this.meetingDate = meetingDatetime;
+    }
+    
+    public Faculty getFacultyId() {
+        return facultyId;
+    }
+
+    public void setFacultyId(Faculty facultyId) {
+        this.facultyId = facultyId;
     }
 
     public String getStatus() {
@@ -141,6 +188,14 @@ public class Council implements Serializable {
     public void setActive(Boolean active) {
         this.active = active;
     }
+    
+    public Affair getAffairId() {
+        return affairId;
+    }
+
+    public void setAffairId(Affair affairId) {
+        this.affairId = affairId;
+    }
 
     @XmlTransient
     public Set<CouncilLecturer> getCouncilLecturerSet() {
@@ -158,6 +213,15 @@ public class Council implements Serializable {
 
     public void setCouncilCriterionSet(Set<CouncilCriterion> councilCriterionSet) {
         this.councilCriterionSet = councilCriterionSet;
+    }
+    
+    @XmlTransient
+    public Set<CouncilThesis> getCouncilThesisSet() {
+        return councilThesisSet;
+    }
+
+    public void setCouncilThesisSet(Set<CouncilThesis> councilThesisSet) {
+        this.councilThesisSet = councilThesisSet;
     }
 
     @XmlTransient
@@ -196,7 +260,67 @@ public class Council implements Serializable {
         }
         return true;
     }
-
+    
+    @JsonProperty("schoolYearId") 
+    public SchoolYearDTO getSchoolYearInfo() {
+        if (schoolYearId != null) {
+            SchoolYearDTO dto = new SchoolYearDTO();
+            
+            dto.setId(schoolYearId.getId());
+            dto.setStartYear(schoolYearId.getStartYear());
+            dto.setEndYear(schoolYearId.getEndYear());
+            
+            return dto;
+        }
+        return null;
+    }
+    
+    @JsonProperty("affair") 
+    public ThesisAffairDTO getAffairInfo() {
+        if (affairId != null) {
+            ThesisAffairDTO dto = new ThesisAffairDTO();
+            
+            dto.setId(affairId.getId());
+            dto.setFirstName(affairId.getFirstName());
+            dto.setLastName(affairId.getLastName());
+            dto.setEmail(affairId.getEmail());
+            
+            return dto;
+        }
+        return null;
+    }
+    
+    @JsonProperty("faculty") 
+    public FacultyDTO getFacultyInfo() {
+        if (facultyId != null) {
+            FacultyDTO facultyDTO = new FacultyDTO();
+            
+            facultyDTO.setId(facultyId.getId());
+            facultyDTO.setName(facultyId.getName());
+            
+            return facultyDTO;
+        }
+        return null;
+    }
+    
+    @JsonProperty("councilLecturerSet") 
+    public Set<CouncilLecturerDTO> getCouncilLecturerSetInfo() {
+        return this.councilLecturerSet.stream().map(CouncilLecturerDTO::toCouncilLecturerDTO)
+                .collect(Collectors.toSet());
+    }
+    
+    @JsonProperty("councilCriterionSet") 
+    public Set<CouncilCriterionDTO> getCouncilCriterionSetInfo() {
+        return this.councilCriterionSet.stream().map(CouncilCriterionDTO::toCouncilCriterionDTO)
+                .collect(Collectors.toSet());
+    }
+    
+    @JsonProperty("councilThesisSet") 
+    public Set<CouncilThesisDTO> getCouncilThesisSetInfo() {
+        return this.councilThesisSet.stream().map(CouncilThesisDTO::toCouncilThesisDTO)
+                .collect(Collectors.toSet());
+    }
+    
     @Override
     public String toString() {
         return "com.pdmv.pojo.Council[ id=" + id + " ]";

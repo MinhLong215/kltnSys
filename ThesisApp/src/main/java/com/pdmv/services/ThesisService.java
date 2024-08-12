@@ -4,9 +4,9 @@
  */
 package com.pdmv.services;
 
-import com.pdmv.dto.ThesisDTO;
-import com.pdmv.dto.CreateThesisDTO;
-import com.pdmv.dto.ThesisDetailsDTO;
+import com.pdmv.dto.thesis.ThesisDTO;
+import com.pdmv.dto.thesis.CreateThesisDTO;
+import com.pdmv.dto.thesis.ThesisDetailsDTO;
 import java.util.List;
 import java.util.Map;
 import org.springframework.web.multipart.MultipartFile;

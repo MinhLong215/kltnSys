@@ -5,6 +5,10 @@
 package com.pdmv.pojo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.pdmv.dto.FacultyDTO;
+import com.pdmv.dto.thesis.ThesisAffairDTO;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Set;
@@ -75,10 +79,17 @@ public class Criterion implements Serializable {
     private Boolean active;
     @JoinColumn(name = "affair_id", referencedColumnName = "id")
     @ManyToOne
+    @JsonIgnore
     private Affair affairId;
+    @JoinColumn(name = "faculty_id", referencedColumnName = "id")
+    @ManyToOne
+    @JsonIgnore
+    private Faculty facultyId;
     @OneToMany(mappedBy = "criterionId")
+    @JsonIgnore
     private Set<CouncilCriterion> councilCriterionSet;
     @OneToMany(mappedBy = "criterionId")
+    @JsonIgnore
     private Set<Score> scoreSet;
 
     public Criterion() {
@@ -148,6 +159,14 @@ public class Criterion implements Serializable {
     public void setAffairId(Affair affairId) {
         this.affairId = affairId;
     }
+    
+    public Faculty getFacultyId() {
+        return facultyId;
+    }
+
+    public void setFacultyId(Faculty facultyId) {
+        this.facultyId = facultyId;
+    }
 
     @XmlTransient
     public Set<CouncilCriterion> getCouncilCriterionSet() {
@@ -202,5 +221,33 @@ public class Criterion implements Serializable {
     @PreUpdate
     public void preUpdate() {
         updatedDate = new Date();
+    }
+    
+    @JsonProperty("affair")
+    public ThesisAffairDTO getAffairInfo() {
+        if (affairId != null) {
+            ThesisAffairDTO dto = new ThesisAffairDTO();
+            
+            dto.setId(affairId.getId());
+            dto.setFirstName(affairId.getFirstName());
+            dto.setLastName(affairId.getLastName());
+            dto.setEmail(affairId.getEmail());
+            
+            return dto;
+        }
+        return null;
+    }
+    
+    @JsonProperty("faculty") 
+    public FacultyDTO getFacultyInfo() {
+        if (facultyId != null) {
+            FacultyDTO facultyDTO = new FacultyDTO();
+            
+            facultyDTO.setId(facultyId.getId());
+            facultyDTO.setName(facultyId.getName());
+            
+            return facultyDTO;
+        }
+        return null;
     }
 }

@@ -4,20 +4,24 @@
  */
 package com.pdmv.repositories.impl;
 
-import com.pdmv.dto.ThesisDTO;
-import com.pdmv.dto.CreateThesisDTO;
-import com.pdmv.dto.ThesisDetailsDTO;
-import com.pdmv.dto.ThesisLecturerDTO;
-import com.pdmv.dto.ThesisStudentDTO;
+import com.pdmv.dto.thesis.ThesisDTO;
+import com.pdmv.dto.thesis.CreateThesisDTO;
+import com.pdmv.dto.thesis.ThesisDetailsDTO;
+import com.pdmv.dto.thesis.ThesisLecturerDTO;
+import com.pdmv.dto.thesis.ThesisStudentDTO;
 import com.pdmv.pojo.Affair;
+import com.pdmv.pojo.Faculty;
 import com.pdmv.pojo.Lecturer;
+import com.pdmv.pojo.Major;
 import com.pdmv.pojo.SchoolYear;
 import com.pdmv.pojo.Student;
 import com.pdmv.pojo.Thesis;
 import com.pdmv.pojo.ThesisLecturer;
 import com.pdmv.pojo.ThesisStudent;
 import com.pdmv.repositories.AffairRepository;
+import com.pdmv.repositories.FacultyRepository;
 import com.pdmv.repositories.LecturerRepository;
+import com.pdmv.repositories.MajorRepositoty;
 import com.pdmv.repositories.SchoolYearRepository;
 import com.pdmv.repositories.StudentRepository;
 import com.pdmv.repositories.ThesisRepository;
@@ -49,11 +53,16 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 @Transactional
 @PropertySource("classpath:theses.properties")
+@PropertySource("classpath:pagination.properties")
 public class ThesisRepositoryImpl implements ThesisRepository {
     @Autowired
     private LocalSessionFactoryBean factory;
     @Autowired
     private SchoolYearRepository schoolYearRepo;
+    @Autowired
+    private FacultyRepository facultyRepo;
+    @Autowired
+    private MajorRepositoty majorRepo;
     @Autowired
     private LecturerRepository lecturerRepo;
     @Autowired
@@ -104,10 +113,14 @@ public class ThesisRepositoryImpl implements ThesisRepository {
         thesis.setActive(thesisDTO.getActive());
 
         SchoolYear schoolYear = schoolYearRepo.getSchoolYearById(thesisDTO.getSchoolYearId());
+        Faculty faculty = facultyRepo.getFacultyById(thesisDTO.getFacultyId());
+        Major major = majorRepo.getMajorById(thesisDTO.getMajorId());
         Lecturer criticalLecturer = lecturerRepo.getLecturerById(thesisDTO.getCriticalLecturerId());
         Affair affair = affairRepo.getAffairById(thesisDTO.getAffairId());
 
         thesis.setSchoolYearId(schoolYear);
+        thesis.setFacultyId(faculty);
+        thesis.setMajorId(major);
         thesis.setCriticalLecturerId(criticalLecturer);
         thesis.setAffairId(affair);
     }
@@ -222,7 +235,7 @@ public class ThesisRepositoryImpl implements ThesisRepository {
     }
 
     @Override
-    public ThesisDetailsDTO getThesisById(int id) {
+    public ThesisDetailsDTO getThesisDTOById(int id) {
         Session s = this.factory.getObject().getCurrentSession();
         Thesis thesis = s.get(Thesis.class, id);
 
@@ -247,8 +260,17 @@ public class ThesisRepositoryImpl implements ThesisRepository {
             if (facultyId != null && !facultyId.isEmpty()) {
                 try {
                     int id = Integer.parseInt(facultyId);
-                    Join<Thesis, Affair> affairJoin = root.join("affairId");
-                    predicates.add(builder.equal(affairJoin.get("facultyId").get("id"), id));
+                    predicates.add(builder.equal(root.get("facultyId").get("id"), id));
+                } catch (NumberFormatException e) {
+                    System.err.println(e.getMessage());
+                }
+            }
+            
+            String schoolYearId = params.get("schoolYearId");
+            if (schoolYearId != null && !schoolYearId.isEmpty()) {
+                try {
+                    int id = Integer.parseInt(schoolYearId);
+                    predicates.add(builder.equal(root.get("schoolYearId").get("id"), id));
                 } catch (NumberFormatException e) {
                     System.err.println(e.getMessage());
                 }
@@ -257,6 +279,11 @@ public class ThesisRepositoryImpl implements ThesisRepository {
             String name = params.get("name");
             if (name != null && !name.isEmpty()) {
                 predicates.add(builder.like(root.get("name"), "%" + name + "%"));
+            }
+            
+            String status = params.get("status");
+            if (status != null && !status.isEmpty()) {
+                predicates.add(builder.like(root.get("status"), status));
             }
 
             String studentId = params.get("studentId");
@@ -269,13 +296,42 @@ public class ThesisRepositoryImpl implements ThesisRepository {
                     System.err.println(e.getMessage());
                 }
             }
+            
+            String lecturerId = params.get("lecturerId");
+            if (lecturerId != null && !lecturerId.isEmpty()) {
+                try {
+                    int id = Integer.parseInt(lecturerId);
+                    Join<Thesis, ThesisLecturer> thesisLecturerJoin = root.join("thesisLecturerSet");
+                    predicates.add(builder.equal(thesisLecturerJoin.get("lecturerId").get("id"), id));
+                } catch (NumberFormatException e) {
+                    System.err.println(e.getMessage());
+                }
+            }
+            
+            String criticalLecturerId = params.get("criticalLecturerId");
+            if (criticalLecturerId != null && !criticalLecturerId.isEmpty()) {
+                try {
+                    int id = Integer.parseInt(criticalLecturerId);
+                    predicates.add(builder.equal(root.get("criticalLecturerId").get("id"), id));
+                } catch (NumberFormatException e) {
+                    System.err.println(e.getMessage());
+                }
+            }
         }
 
         if (!predicates.isEmpty()) {
             query.where(predicates.toArray(new Predicate[0]));
         }
+        
+        query.orderBy(builder.desc(root.get("id")));
+
+        int page = Integer.parseInt(params.getOrDefault("page", "1"));
+        int pageSize = Integer.parseInt(params.getOrDefault("pageSize", this.env.getProperty("pageSize"))); 
 
         Query<Thesis> q = s.createQuery(query);
+        q.setFirstResult((page - 1) * pageSize); 
+        q.setMaxResults(pageSize); 
+
         return q.getResultList().stream().map(ThesisDTO::toThesisDTO).collect(Collectors.toList());
     }
 
@@ -305,5 +361,17 @@ public class ThesisRepositoryImpl implements ThesisRepository {
         thesis.setReportFile(url);
         thesis.setStatus(this.env.getProperty("thesis.status.submitted"));
         s.merge(thesis);
+    }
+
+    @Override
+    public Thesis getThesisById(int id) {
+        Session s = this.factory.getObject().getCurrentSession();
+        Thesis thesis = s.get(Thesis.class, id);
+
+        if (thesis == null) {
+            return null;
+        }
+        
+        return thesis;
     }
 }
